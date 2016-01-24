@@ -96,7 +96,7 @@ class GFEntryUtil {
 								<th scope="row"><label for="gfe_form">Form</label></th>
 								<td>
 									<select id="gfe_form_id" name="gfe_form_id">
-										<option value="">All Forms</option>
+										<option value="" selected>All Forms</option>
 										<?php foreach( GFAPI::get_forms() as $form ): ?>
 											<option value="<?php echo esc_attr( $form['id'] ) ?>"><?php echo esc_html( $form['title'] ) ?></option>
 										<?php endforeach; ?>
@@ -188,8 +188,6 @@ class GFEntryUtil {
 
 		}
 
-		// $response['results']['total_entry_count'] = $total_count;
-		
 		wp_send_json( $response );
 
 		die();
@@ -215,27 +213,29 @@ class GFEntryUtil {
 				    return (input.value !== notADateValue);
 				}
 
-				var criteria = {
-					start_date 	: $('#gfe_start_date').val(),
-					end_date 	: $('#gfe_end_date').val(),
-					form_id		: $('#gfe_form_id option:selected').val(),
-				}
-
 				$('#count-entries').click(function(e){
-					criteria['method'] = 'count';
-					runUtilAjax();
+					runUtilAjax('count');
 					$('#gfe-results').closest('.card').css('display','block');
 					$('#ajax-loader').css('display','block');
 					e.preventDefault();
 				});
 				
-				function runUtilAjax(){
+				function runUtilAjax(methodToRun){
+					var criteria = {
+						start_date 	: $('#gfe_start_date').val(),
+						end_date 	: $('#gfe_end_date').val(),
+						form_id		: $('#gfe_form_id').find(':selected').val(),
+						method		: methodToRun
+					}
+
 					$.post( ajaxurl, {
 						'action'	: 'gfe_util',
 				        'criteria'		: criteria
 				    }, function(response){
 				    	if(response && response['results'] && response['criteria']){
 				    		if (response['criteria']['method'] == 'count') {
+				    			$('#gfe-results').empty();
+
 				    			var results = response['results'],
 				    				rows = '',
 				    				exportUrl = '"Form","Count"\r\n';
@@ -254,6 +254,7 @@ class GFEntryUtil {
 						                'href': exportUrl,
 						                'target': '_blank'
 						        });
+
 						        $('#gfe-results').append(exportLink);
 						        $('#ajax-loader').css('display','none');
 				    		}
